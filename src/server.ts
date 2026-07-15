@@ -3,6 +3,8 @@ import axios from "axios";
 import {getEnvVariable} from "./config"
 import { apiRequestStringBuilder, ApodParams, isValidDate, savePhoto} from "./utils"
 import { EndpointCache, ApodResponse } from "./cache";
+import { json } from "body-parser";
+
 
 const TEST_API = "https://official-joke-api.appspot.com/random_joke"
 const app = express();
@@ -40,6 +42,8 @@ router.get('/apod/today', (req, res) => {
 router.get('/apod/photos', (req, res) => {
     const startDate : string | undefined = req.query.start_date ? req.query.start_date.toString() : undefined
     const endDate : string | undefined = req.query.end_date ? req.query.end_date.toString() : undefined
+    const limit : number = req.query.limit ? parseInt(req.query.limit.toString()) : 10
+    const offset : number  = req.query.offset ? parseInt(req.query.offset.toString()) : 0
     
     if (!startDate && !endDate) {
         res.status(400).json({error: "start_date and end_date must be included"})
@@ -63,18 +67,22 @@ router.get('/apod/photos', (req, res) => {
     }
 
     const nasaApiString = apiRequestStringBuilder(apiParams) 
-    if (endpointCache.apodPhotos && endpointCache.apodPhotos.request == nasaApiString) { 
-        res.send(endpointCache.apodPhotos);
+    const nextPage: object = {next_page : `${req.protocol}://${req.hostname}:8000${req.originalUrl}&offset=${offset+limit}&limit=${limit}`}
+    if (endpointCache.apodPhotos && endpointCache.apodPhotos.request.includes(nasaApiString)) { 
+        const photoData : ApodResponse[] = endpointCache.apodPhotos.response
+        const truncatedData = photoData.slice(offset, offset + limit);
+        res.send([...truncatedData, nextPage]);
         return;
     }
 
-    axios.get<ApodResponse[]>(nasaApiString)
+    axios.get<ApodResponse[]>(TEST_API)
         .then(apodApiResponse => {
             const photosData : ApodResponse[] = apodApiResponse.data
+           
             for (const photo of photosData) {
                  savePhoto(photo.url);
             }
-            res.send(photosData)    
+            res.send([...photosData, nextPage])    
         })
         .catch(error =>{
             res.send(error)
