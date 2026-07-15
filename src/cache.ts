@@ -12,6 +12,7 @@ type CachedApiData = {
         response: ApodResponse[] 
     }  | undefined
 }
+
 export type ApodResponse = {
     copyright: string,
     date: string,
@@ -22,6 +23,7 @@ export type ApodResponse = {
     title: string
     url : string
 }
+
 export class EndpointCache {
     _apodToday: {
         request : string
@@ -60,14 +62,17 @@ export class EndpointCache {
             console.log(error);
         }
     }
+
     public set apodPhotos(data: {request: string, response: ApodResponse[]}){
         this._apodPhotos = data
         this.updateCache()
     }
+
     public set apodToday(data: {request: string, response: ApodResponse}){
         this._apodToday = data
         this.updateCache()
     }
+    
     public get apodPhotos() : {
         request : string
         response: ApodResponse[] 

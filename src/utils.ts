@@ -27,6 +27,7 @@ export function savePhoto(photoUrl: string) : void {
         console.error("Unknown execution error:", error)
     }
 }
+
 export function apiRequestStringBuilder(params : ApodParams){
     const apiBase : string = "https://api.nasa.gov/planetary/apod?" 
     const apiParts : string[] = []

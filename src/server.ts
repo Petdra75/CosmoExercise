@@ -4,7 +4,6 @@ import {getEnvVariable} from "./config"
 import { apiRequestStringBuilder, ApodParams, isValidDate, savePhoto} from "./utils"
 import { EndpointCache, ApodResponse } from "./cache";
 
-
 const TEST_API = "https://official-joke-api.appspot.com/random_joke"
 const app = express();
 const port = 8000;
@@ -41,8 +40,7 @@ router.get('/apod/today', (req, res) => {
 router.get('/apod/photos', (req, res) => {
     const startDate : string | undefined = req.query.start_date ? req.query.start_date.toString() : undefined
     const endDate : string | undefined = req.query.end_date ? req.query.end_date.toString() : undefined
-    const limit : number = req.query.limit ? parseInt(req.query.limit.toString()) : 10
-    const offset : number  = req.query.offset ? parseInt(req.query.offset.toString()) : 0
+    
     if (!startDate && !endDate) {
         res.status(400).json({error: "start_date and end_date must be included"})
         return;
