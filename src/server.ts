@@ -1,18 +1,17 @@
 import express from "express";
 import axios from "axios";
 import {getEnvVariable} from "./config"
-import { apiRequestStringBuilder, ApodParams, isValidDate, savePhoto} from "./utils"
-import { EndpointCache, ApodResponse } from "./cache";
-import { json } from "body-parser";
-
+import { apiRequestStringBuilder, isValidDate, savePhoto} from "./utils"
+import { EndpointCache} from "./cache";
+import { ApodParams, ApodResponse } from "./endpoints/apod";
 
 const TEST_API = "https://official-joke-api.appspot.com/random_joke"
 const app = express();
 const port = 8000;
 const endpointCache = new EndpointCache()
+const router = express.Router();
 
 app.use(express.json());
-const router = express.Router();
 
 router.get('/test', (_, res) => res.send('Hello world !'));
 
@@ -67,22 +66,27 @@ router.get('/apod/photos', (req, res) => {
     }
 
     const nasaApiString = apiRequestStringBuilder(apiParams) 
-    const nextPage: object = {next_page : `${req.protocol}://${req.hostname}:8000${req.originalUrl}&offset=${offset+limit}&limit=${limit}`}
+    const nextPageUrl = `${req.protocol}://${req.hostname}:8000${req.originalUrl}&offset=${offset+limit}&limit=${limit}`
+    
     if (endpointCache.apodPhotos && endpointCache.apodPhotos.request.includes(nasaApiString)) { 
         const photoData : ApodResponse[] = endpointCache.apodPhotos.response
         const truncatedData = photoData.slice(offset, offset + limit);
-        res.send([...truncatedData, nextPage]);
+        for (const photo of truncatedData) {
+                savePhoto(photo.url);
+            }
+        truncatedData[truncatedData.length-1]["next_page"] = nextPageUrl        
+        res.send(truncatedData);
         return;
     }
 
     axios.get<ApodResponse[]>(TEST_API)
-        .then(apodApiResponse => {
+        .then(async apodApiResponse => {
             const photosData : ApodResponse[] = apodApiResponse.data
-           
+            photosData[photosData.length-1]["next_page"] = nextPageUrl
             for (const photo of photosData) {
-                 savePhoto(photo.url);
+                savePhoto(photo.url);
             }
-            res.send([...photosData, nextPage])    
+            res.send(photosData)    
         })
         .catch(error =>{
             res.send(error)
@@ -95,5 +99,3 @@ app.use('/', router);
 app.listen(port, () => {
   console.log(`Test backend is running on port ${port}`);
 });
-
-

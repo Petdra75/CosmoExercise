@@ -1,40 +1,32 @@
-import { error } from "console";
-import { readFileSync } from "fs";
 import { join } from "path";
-import { exec } from 'child_process';
-
-const PHOTO_SAVE_DIR = "C:\\Users\\PetDra\\bootcamp\\day6\\photos"
-
-export type ApodParams = {
-    date? : string,
-    start_date? : string,
-    end_date? : string,
-    count? : number,
-    thumbs? : boolean,
-    api_key : string
-}
+import { getEnvVariable } from "./config";
+import { ApodParams } from "./endpoints/apod";
+import axios from "axios";
+import fs from "fs";
 
 export function savePhoto(photoUrl: string) : void {
     const urlParts = photoUrl.split("/")
     const fileName = `${urlParts[urlParts.length-1]}` 
-    const savePath = join(PHOTO_SAVE_DIR, fileName)
-    const curlCall = `curl.exe -o "${savePath}" "${photoUrl}"`
+    const savePath = join(getEnvVariable("PHOTO_SAVE_DIR"), fileName);
+    
+    if (!fileName.endsWith(".jpg")){
+        return;
+    }
 
-    try {
-        const {stdout, stderr} = exec(curlCall);
-    }
-    catch(error) {
-        console.error("Unknown execution error:", error)
-    }
+    axios.get(photoUrl, {responseType: 'arraybuffer'})
+        .then((res) => {
+            fs.writeFileSync(savePath, Buffer.from(res.data, 'binary'));
+        })
 }
 
 export function apiRequestStringBuilder(params : ApodParams){
     const apiBase : string = "https://api.nasa.gov/planetary/apod?" 
     const apiParts : string[] = []
+
     for(const param of Object.keys(params) as Array<keyof typeof params> ) {
         apiParts.push(`${param}=${params[param]}`)
-        
     }
+
     return apiBase.concat(apiParts.join("&"));
 }
 

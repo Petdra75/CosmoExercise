@@ -1,39 +1,30 @@
 import { join } from "path";
 import { readFileSync, writeFileSync } from "fs";
-const CACHE_FILE_PATH = "./apod/chache.json" 
+import { ApodResponse } from "./endpoints/apod";
+
+const CACHE_FILE_PATH = "./apod/cache.json" 
 
 type CachedApiData = {
-    apodToday: {
+    apodToday?: {
         request : string 
         response: ApodResponse 
-    } | undefined
-    apodPhotos: {
+    }
+    apodPhotos?: {
         request: string 
         response: ApodResponse[] 
-    }  | undefined
-}
-
-export type ApodResponse = {
-    copyright: string,
-    date: string,
-    explanation: string,
-    hdurl: string,
-    media_type : string
-    service_version: string
-    title: string
-    url : string
+    }
 }
 
 export class EndpointCache {
-    _apodToday: {
+    _apodToday?: {
         request : string
         response: ApodResponse 
-    } | undefined
+    }
 
-    _apodPhotos: {
+    _apodPhotos?: {
         request: string 
         response: ApodResponse[] 
-    } | undefined
+    } 
     
     constructor() {
         this._apodToday = undefined
