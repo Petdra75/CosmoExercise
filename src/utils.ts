@@ -4,12 +4,14 @@ import { ApodParams } from "./endpoints/apod";
 import axios from "axios";
 import fs from "fs";
 
+const IMAGE_EXTENSION = ".jpg"
+
 export function savePhoto(photoUrl: string) : void {
     const urlParts = photoUrl.split("/")
     const fileName = `${urlParts[urlParts.length-1]}` 
     const savePath = join(getEnvVariable("PHOTO_SAVE_DIR"), fileName);
     
-    if (!fileName.endsWith(".jpg")){
+    if (!fileName.endsWith(IMAGE_EXTENSION)){
         return;
     }
 
