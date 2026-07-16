@@ -71,10 +71,8 @@ router.get('/apod/photos', (req, res) => {
     if (endpointCache.apodPhotos && endpointCache.apodPhotos.request.includes(nasaApiString)) { 
         const photoData : ApodResponse[] = endpointCache.apodPhotos.response
         const truncatedData = photoData.slice(offset, offset + limit);
-        for (const photo of truncatedData) {
-                savePhoto(photo.url);
-            }
         truncatedData[truncatedData.length-1]["next_page"] = nextPageUrl        
+        
         res.send(truncatedData);
         return;
     }
